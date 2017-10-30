@@ -46,16 +46,27 @@ namespace PEA
 		{
 			InputGraph = input.GraphMatrix;
 			numbOfCities = input.Dimension;
-			powah = (Int64) Math.Pow (2, numbOfCities);
-			g = new int[numbOfCities][];
-			p = new int[numbOfCities][];
-			PathDistance = int.MaxValue;
-			OutputList = new List<int>();
-
-			for (int i = 0; i < numbOfCities; i++)
+			try
 			{
-				g[i] = new int[powah];
-				p[i] = new int[powah];
+				powah = (Int64) Math.Pow(2, numbOfCities);
+				g = new int[numbOfCities][];
+				p = new int[numbOfCities][];
+				PathDistance = int.MaxValue;
+				OutputList = new List<int>();
+
+				for (int i = 0; i < numbOfCities; i++)
+				{
+					g[i] = new int[powah];
+					p[i] = new int[powah];
+				}
+			}
+			catch (OutOfMemoryException e)
+			{
+				Console.WriteLine("Brak pamięci. Opis błędu: " + e);
+			}
+			catch (OverflowException e)
+			{
+				Console.WriteLine(e);
 			}
 
 			for (int i = 0; i < numbOfCities; i++)

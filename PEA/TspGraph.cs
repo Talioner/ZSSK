@@ -9,6 +9,7 @@ namespace PEA
 {
 	class TspGraph
 	{
+		private string edgeWeightFormat = "";
 		public string Name { get; private set; }
 		public string Type { get; private set; }
 		public int Dimension { get; private set; }
@@ -52,28 +53,104 @@ namespace PEA
 						Type = splitLine[1].Trim (' ');
 					else if (splitLine[0].ToUpper ().Equals ("DIMENSION"))
 						Dimension = int.Parse(splitLine[1].Trim (' '));
+					else if (splitLine[0].ToUpper().Equals("EDGE_WEIGHT_FORMAT"))
+						edgeWeightFormat = splitLine[1].Trim(' ');
 				}
 
-				while ((lineToSplit = file.ReadLine ()) != String.IsInterned ("EOF"))
+				while ((lineToSplit = file.ReadLine ()) != String.IsInterned ("EOF") && !file.EndOfStream)
 				{
 					splitLine = lineToSplit.Split(' ');
 					foreach (string val in splitLine)
 					{
-						if (!String.IsNullOrWhiteSpace(val) && !String.IsNullOrEmpty(val))
-							intsFromFile.Add(int.Parse(val));
+						try
+						{
+							if (!String.IsNullOrWhiteSpace(val) && !String.IsNullOrEmpty(val))
+								intsFromFile.Add(int.Parse(val));
+						}
+						catch (FormatException)
+						{
+							Console.WriteLine("Zły format danych.");
+						}
 					}
 				}
 
-				int k = 0;
 				GraphMatrix = new int[Dimension][];
 
 				for (int i = 0; i < Dimension; i++)
-				{
 					GraphMatrix[i] = new int[Dimension];
 
-					for (int j = 0; j < Dimension; j++, k++)
+				if (edgeWeightFormat.ToUpper().Equals("FULL_MATRIX"))
+				{
+					int k = 0;
+
+					for (int i = 0; i < Dimension; i++)
 					{
-						GraphMatrix[i][j] = intsFromFile[k];
+						for (int j = 0; j < Dimension; j++, k++)
+							GraphMatrix[i][j] = intsFromFile[k];
+					}
+				}
+				else if (edgeWeightFormat.ToUpper().Equals("UPPER_ROW"))
+				{
+					int k = 0;
+
+					for (int i = 0; i < Dimension; i++)
+					{
+						for (int j = i; j < Dimension; j++)
+						{
+							if (i == j)
+								GraphMatrix[i][j] = 0;
+							else
+							{
+								GraphMatrix[i][j] = intsFromFile[k];
+								GraphMatrix[j][i] = GraphMatrix[i][j];
+								k++;
+							}
+						}
+					}
+				}
+				else if (edgeWeightFormat.ToUpper().Equals("LOWER_ROW"))
+				{
+					int k = 0;
+
+					for (int i = 0; i < Dimension; i++)
+					{
+						for (int j = 0; j <= i; j++)
+						{
+							if (i == j)
+								GraphMatrix[i][j] = 0;
+							else
+							{
+								GraphMatrix[i][j] = intsFromFile[k];
+								GraphMatrix[j][i] = GraphMatrix[i][j];
+								k++;
+							}
+						}
+					}
+				}
+				else if (edgeWeightFormat.ToUpper().Equals("UPPER_DIAG_ROW"))
+				{
+					int k = 0;
+
+					for (int i = 0; i < Dimension; i++)
+					{
+						for (int j = i; j < Dimension; j++, k++)
+						{
+							GraphMatrix[i][j] = intsFromFile[k];
+							GraphMatrix[j][i] = GraphMatrix[i][j];
+						}
+					}
+				}
+				else if (edgeWeightFormat.ToUpper().Equals("LOWER_DIAG_ROW"))
+				{
+					int k = 0;
+
+					for (int i = 0; i < Dimension; i++)
+					{
+						for (int j = 0; j <= i; j++, k++)
+						{
+							GraphMatrix[i][j] = intsFromFile[k];
+							GraphMatrix[j][i] = GraphMatrix[i][j];
+						}
 					}
 				}
 

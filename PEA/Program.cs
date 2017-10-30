@@ -62,7 +62,7 @@ namespace PEA
 						} while (secondaryMenuKey != 27); 
 						break;
 					default:
-						Console.WriteLine ("Nieprawidłowy klawisz. Wybierz jedną z opcji.");
+						//Console.WriteLine ("Nieprawidłowy klawisz. Wybierz jedną z opcji.");
 						break;
 				}
 			} while (primaryMenuKey != 27);
