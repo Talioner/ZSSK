@@ -13,7 +13,7 @@ namespace PEA
 		public string Name { get; private set; }
 		public string Type { get; private set; }
 		public int Dimension { get; private set; }
-		public int[][] GraphMatrix { get; private set; }
+		public Int16[][] GraphMatrix { get; private set; }
 
 		public TspGraph ()
 		{
@@ -21,6 +21,44 @@ namespace PEA
 			Type = null;
 			Dimension = 0;
 			GraphMatrix = null;
+		}
+
+		public TspGraph(int dim, bool tspOrAtsp, int maxDist = 100, string name = "default")
+		{
+			Dimension = dim;
+			Name = name;
+			Type = !tspOrAtsp ? "TSP" : "ATSP";
+			GraphMatrix = new Int16[Dimension][];
+
+			for (int i = 0; i < Dimension; i++)
+				GraphMatrix[i] = new Int16[Dimension];
+
+			Random rand = new Random();
+
+			if (!tspOrAtsp)
+			{
+				for (int i = 0; i < Dimension; i++)
+				{
+					for (int j = 0; j <= i; j++)
+					{
+						if (i == j)
+							GraphMatrix[i][j] = 0;
+						else
+						{
+							GraphMatrix[i][j] = (Int16)rand.Next(1, maxDist);
+							GraphMatrix[j][i] = GraphMatrix[i][j];
+						}
+					}
+				}
+			}
+			else
+			{
+				for (int i = 0; i < Dimension; i++)
+				{
+					for (int j = 0; j < Dimension; j++)
+						GraphMatrix[i][j] = (Int16)rand.Next(1, maxDist);
+				}
+			}
 		}
 
 		public void PrintGraph ()
@@ -65,19 +103,20 @@ namespace PEA
 						try
 						{
 							if (!String.IsNullOrWhiteSpace(val) && !String.IsNullOrEmpty(val))
-								intsFromFile.Add(int.Parse(val));
+								intsFromFile.Add(Int16.Parse(val));
 						}
 						catch (FormatException)
 						{
 							Console.WriteLine("Zły format danych.");
+							throw;
 						}
 					}
 				}
 
-				GraphMatrix = new int[Dimension][];
+				GraphMatrix = new Int16[Dimension][];
 
 				for (int i = 0; i < Dimension; i++)
-					GraphMatrix[i] = new int[Dimension];
+					GraphMatrix[i] = new Int16[Dimension];
 
 				if (edgeWeightFormat.ToUpper().Equals("FULL_MATRIX"))
 				{
@@ -86,7 +125,10 @@ namespace PEA
 					for (int i = 0; i < Dimension; i++)
 					{
 						for (int j = 0; j < Dimension; j++, k++)
-							GraphMatrix[i][j] = intsFromFile[k];
+						{
+							if (intsFromFile[k] > Int16.MaxValue) intsFromFile[k] = 0;
+							GraphMatrix[i][j] = (Int16)intsFromFile[k];
+						}							
 					}
 				}
 				else if (edgeWeightFormat.ToUpper().Equals("UPPER_ROW"))
@@ -101,7 +143,8 @@ namespace PEA
 								GraphMatrix[i][j] = 0;
 							else
 							{
-								GraphMatrix[i][j] = intsFromFile[k];
+								if (intsFromFile[k] > Int16.MaxValue) intsFromFile[k] = 0;
+								GraphMatrix[i][j] = (Int16)intsFromFile[k];
 								GraphMatrix[j][i] = GraphMatrix[i][j];
 								k++;
 							}
@@ -120,7 +163,8 @@ namespace PEA
 								GraphMatrix[i][j] = 0;
 							else
 							{
-								GraphMatrix[i][j] = intsFromFile[k];
+								if (intsFromFile[k] > Int16.MaxValue) intsFromFile[k] = 0;
+								GraphMatrix[i][j] = (Int16)intsFromFile[k];
 								GraphMatrix[j][i] = GraphMatrix[i][j];
 								k++;
 							}
@@ -135,7 +179,8 @@ namespace PEA
 					{
 						for (int j = i; j < Dimension; j++, k++)
 						{
-							GraphMatrix[i][j] = intsFromFile[k];
+							if (intsFromFile[k] > Int16.MaxValue) intsFromFile[k] = 0;
+							GraphMatrix[i][j] = (Int16)intsFromFile[k];
 							GraphMatrix[j][i] = GraphMatrix[i][j];
 						}
 					}
@@ -148,10 +193,17 @@ namespace PEA
 					{
 						for (int j = 0; j <= i; j++, k++)
 						{
-							GraphMatrix[i][j] = intsFromFile[k];
+							if (intsFromFile[k] > Int16.MaxValue) intsFromFile[k] = 0;
+							GraphMatrix[i][j] = (Int16)intsFromFile[k];
 							GraphMatrix[j][i] = GraphMatrix[i][j];
 						}
 					}
+				}
+				else
+				{
+					Console.WriteLine("Brak deklaracji formatu danych wejściowych grafu, lub typ nieobsługiwany.");
+					Console.WriteLine("Obsługiwane formaty:");
+					Console.Write("FULL_MATRIX\nUPPER_ROW\nLOWER_ROW\nUPPER_DIAG_ROW\nLOWER_DIAG_ROW\n");
 				}
 
 				file.Close();
