@@ -27,7 +27,8 @@ namespace PEA
 				Console.WriteLine ("--2. Przejrzyj właściwości grafu.");
 				Console.WriteLine ("--3. Rozwiąż problem za pomocą wybranego algorytmu.");
 				Console.WriteLine ("--4. Stwórz zestaw o określonej ilości miast.");
-				Console.WriteLine ("--5. Przeprowadź testy czasowe.");
+				Console.WriteLine ("--5. Przeprowadź testy czasowe dla losowych instancji.");
+				Console.WriteLine ("--6. Przeprowadź testy czasowe dla danych z tsplib.");
 
 				primaryMenuKey = Console.ReadKey().KeyChar;
 
@@ -37,15 +38,23 @@ namespace PEA
 						Console.Clear ();
 						Console.WriteLine ("Wpisz ścieżkę pliku.");
 						string filename = Console.ReadLine();
+						filename = filename?.Replace(@"\", @"\\");
 						graph.ReadGraphFromFile(filename);
 						break;
 					case '2':
 						Console.Clear ();
-						Console.WriteLine ("---Graf");
-						Console.WriteLine ("----Nazwa: " + graph.Name);
-						Console.WriteLine ("----Typ: " + graph.Type);
-						Console.WriteLine ("----Wymiary: " + graph.Dimension);
-						graph.PrintGraph();
+						try
+						{
+							Console.WriteLine("---Graf");
+							Console.WriteLine("----Nazwa: " + graph.Name);
+							Console.WriteLine("----Typ: " + graph.Type);
+							Console.WriteLine("----Wymiary: " + graph.Dimension);
+							graph.PrintGraph();
+						}
+						catch (NullReferenceException)
+						{
+							Console.WriteLine("Graf albo jego właściwości są null.");
+						}
 						Console.ReadKey();
 						break;
 					case '3':
@@ -75,7 +84,7 @@ namespace PEA
 									TspDynamicProgramming.SolveTsp(graph);
 									cts.Cancel();
 									Console.WriteLine();
-									TspDynamicProgramming.ShowResults();
+									TspDynamicProgramming.ShowResults();			
 									TspDynamicProgramming.ClearCollections();
 									Console.ReadKey();
 									break;
@@ -86,7 +95,6 @@ namespace PEA
 						break;
 					case '4':
 						Console.Clear();
-						//string input;
 						int dim, maxDist;
 						Console.WriteLine("---Podaj ilość miast:");
 						input = Console.ReadLine();
@@ -139,8 +147,20 @@ namespace PEA
 							Console.ReadKey();
 						}
 						break;
+					case '6':
+						Console.Clear();
+						Console.WriteLine("Zostaną przprowadzone testy dla danych z tsplib. Wciśnij ESC aby anulować albo dowolny klawisz aby kontynuować.");
+						secondaryMenuKey = Console.ReadKey().KeyChar;
+						if (secondaryMenuKey != 27)
+						{
+							Console.WriteLine("Wykonywane są testy. Może to zająć dużo czasu.");
+							double[,] results = DpTestsTspLib(graph);
+							TimesToFile("DpTspLib.txt", GetAverageTimes(results));
+							Console.WriteLine("Koniec testów. Wciśnij dowolny klawisz aby wrócić do menu.");
+							Console.ReadKey();
+						}
+						break;
 					default:
-						//Console.WriteLine ("Nieprawidłowy klawisz. Wybierz jedną z opcji.");
 						break;
 				}
 			} while (primaryMenuKey != 27);
@@ -148,7 +168,7 @@ namespace PEA
 
 		private static double[,] DpTests(TspGraph graph, bool tspOrAtsp)
 		{
-			double[,] timesArray = new double[6,10];
+			double[,] timesArray = new double[6,100];
 			int numbOfCities = 14;
 
 			for (int i = 0; i < timesArray.GetLength(0); i++, numbOfCities += 2)
@@ -160,6 +180,57 @@ namespace PEA
 					timesArray[i, j] = TspDynamicProgramming.TimeMeasured.TotalMilliseconds;
 					TspDynamicProgramming.ClearCollections();
 				}
+			}
+
+			return timesArray;
+		}
+		//testy dla wybranych instancji z tsplib umieszczonych w folderze ./tsplib
+		private static double[,] DpTestsTspLib(TspGraph graph)
+		{
+			double[,] timesArray = new double[4, 100];
+			int i = 0;
+
+			graph = new TspGraph();
+			graph.ReadGraphFromFile(AppDomain.CurrentDomain.BaseDirectory + @"\tsplib\gr17.tsp");
+
+			for (int j = 0; j < timesArray.GetLength(1); j++)
+			{
+				TspDynamicProgramming.SolveTsp(graph);
+				timesArray[i, j] = TspDynamicProgramming.TimeMeasured.TotalMilliseconds;
+				TspDynamicProgramming.ClearCollections();
+			}
+			i++;
+
+			graph = new TspGraph();
+			graph.ReadGraphFromFile(AppDomain.CurrentDomain.BaseDirectory + @"\tsplib\gr21.tsp");
+
+			for (int j = 0; j < timesArray.GetLength(1); j++)
+			{
+				TspDynamicProgramming.SolveTsp(graph);
+				timesArray[i, j] = TspDynamicProgramming.TimeMeasured.TotalMilliseconds;
+				TspDynamicProgramming.ClearCollections();
+			}
+			i++;
+
+			graph = new TspGraph();
+			graph.ReadGraphFromFile(AppDomain.CurrentDomain.BaseDirectory + @"\tsplib\gr24.tsp");
+
+			for (int j = 0; j < timesArray.GetLength(1); j++)
+			{
+				TspDynamicProgramming.SolveTsp(graph);
+				timesArray[i, j] = TspDynamicProgramming.TimeMeasured.TotalMilliseconds;
+				TspDynamicProgramming.ClearCollections();
+			}
+			i++;
+
+			graph = new TspGraph();
+			graph.ReadGraphFromFile(AppDomain.CurrentDomain.BaseDirectory + @"\tsplib\br17.atsp");
+
+			for (int j = 0; j < timesArray.GetLength(1); j++)
+			{
+				TspDynamicProgramming.SolveTsp(graph);
+				timesArray[i, j] = TspDynamicProgramming.TimeMeasured.TotalMilliseconds;
+				TspDynamicProgramming.ClearCollections();
 			}
 
 			return timesArray;

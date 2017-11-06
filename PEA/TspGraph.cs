@@ -21,6 +21,7 @@ namespace PEA
 			Type = null;
 			Dimension = 0;
 			GraphMatrix = null;
+			edgeWeightFormat = "";
 		}
 
 		public TspGraph(int dim, bool tspOrAtsp, int maxDist = 100, string name = "default")
@@ -108,7 +109,12 @@ namespace PEA
 						catch (FormatException)
 						{
 							Console.WriteLine("Zły format danych.");
-							throw;
+							Name = null;
+							Type = null;
+							Dimension = 0;
+							GraphMatrix = null;
+							edgeWeightFormat = "";
+							return;
 						}
 					}
 				}

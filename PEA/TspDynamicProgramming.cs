@@ -36,14 +36,11 @@ namespace PEA
 					TimeMeasured = stopwatch.Elapsed;
 					OutputList.Add(0);
 					GetOptimalPath(0, powah - 2);
+					OutputList.Add(0);
 				}
 				else Console.WriteLine("Nie wykonano obliczeń, ponieważ wystąpił błąd.");
 			}
-			else
-			{
-				Console.WriteLine("Przed uruchomieniem algorytmu wczytaj odpowiednio dane wejściowe.\n(Wciśnij dowolny klawisz aby wrócić)");
-				Console.ReadKey();
-			}
+			else Console.WriteLine("Przed uruchomieniem algorytmu wczytaj odpowiednio dane wejściowe.\n(Wciśnij dowolny klawisz aby wrócić)");
 		}
 		//inicjalizacja zasobow klasy przed wykonywaniem obliczen
 		private static bool Init (TspGraph input)
@@ -68,13 +65,11 @@ namespace PEA
 			{
 				Console.WriteLine("Brak pamięci. Opis błędu: " + e);
 				return false;
-				//throw;
 			}
 			catch (OverflowException e)
 			{
 				Console.WriteLine(e);
 				return false;
-				//throw;
 			}
 
 			for (int i = 0; i < numbOfCities; i++)
@@ -136,15 +131,18 @@ namespace PEA
 		//wyswietlenie wynikow
 		public static void ShowResults ()
 		{
-			Console.WriteLine("Programowanie dynamiczne - wyniki");
-			Console.WriteLine("Długość ścieżki: " + PathDistance);
-			Console.WriteLine("Kolejność miast: ");
-			foreach (var city in OutputList)
+			if (OutputList != null)
 			{
-				Console.Write(city + " ");
+				Console.WriteLine("Programowanie dynamiczne - wyniki");
+				Console.WriteLine("Długość ścieżki: " + PathDistance);
+				Console.WriteLine("Kolejność miast: ");
+				foreach (var city in OutputList)
+				{
+					Console.Write(city + " ");
+				}
+				Console.Write('\n');
+				Console.WriteLine("Wynik wyznaczono w czasie: " + TimeMeasured.TotalMilliseconds + " ms.");
 			}
-			Console.Write('\n');
-			Console.WriteLine("Wynik wyznaczono w czasie: " + TimeMeasured.TotalMilliseconds + " ms.");
 		}
 		//czyszczenie kolekcji aby gc oznaczyl zasoby do zwolnienia
 		//inputGraph nie jest oznaczony jako null aby nie zniszczyc oryginalu
