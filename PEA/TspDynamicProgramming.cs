@@ -106,7 +106,7 @@ namespace PEA
 				{
 					tempMinDistance = InputGraph[start][i] + ComputeDistance(i, maskedSet);
 
-					if (tempMinDistance == Int16.MaxValue || tempMinDistance < minDistance)
+					if (minDistance == Int16.MaxValue || tempMinDistance < minDistance)
 					{
 						minDistance = tempMinDistance;
 						p[start][set] = i;
