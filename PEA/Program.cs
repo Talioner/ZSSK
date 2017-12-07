@@ -17,6 +17,8 @@ namespace PEA
 			TspGraph graph = new TspGraph();
 			char primaryMenuKey, secondaryMenuKey;
 			string input;
+			CancellationTokenSource cts = new CancellationTokenSource();
+			CancellationToken ct = cts.Token;
 
 			do
 			{
@@ -63,17 +65,15 @@ namespace PEA
 							Console.Clear ();
 							Console.WriteLine("---Algorytmy");
 							Console.WriteLine("----1. Rozwiąż algorytmem programowania dynamicznego.");
+							Console.WriteLine("----2. Rozwiąż algorytmem przeszukiwania z zakazami.");
 
 							secondaryMenuKey = Console.ReadKey().KeyChar;
 
 							switch (secondaryMenuKey)
 							{
-								//ten case i tak nie sluzy do testow, wiec pozwolilem sobie
-								//na taka drobnostke jak wypisywanie kropek podczas czekania na wyniki
 								case '1':
+									cts = new CancellationTokenSource();
 									Console.Clear ();
-									CancellationTokenSource cts = new CancellationTokenSource();
-									CancellationToken ct = cts.Token;
 									Task.Run(new Action(() => {
 										while (!cts.IsCancellationRequested)
 										{
@@ -83,9 +83,60 @@ namespace PEA
 									}), ct);
 									TspDynamicProgramming.SolveTsp(graph);
 									cts.Cancel();
+									cts.Dispose();
 									Console.WriteLine();
 									TspDynamicProgramming.ShowResults();			
 									TspDynamicProgramming.ClearCollections();
+									Console.ReadKey();
+									break;
+								case '2':
+									Console.Clear();
+									int mi, mtfb, pt, tlc;
+									Console.WriteLine("---Podaj ilość iteracji:");
+									input = Console.ReadLine();
+
+									while (!Int32.TryParse(input, out mi))
+									{
+										input = Console.ReadLine();
+									}
+
+									Console.WriteLine("---Podaj ilość prób dla jednej gałęzi:");
+									input = Console.ReadLine();
+
+									while (!Int32.TryParse(input, out mtfb))
+									{
+										input = Console.ReadLine();
+									}
+
+									Console.WriteLine("---Podaj ilość prób bez polepszenia rezultatu:");
+									input = Console.ReadLine();
+
+									while (!Int32.TryParse(input, out pt))
+									{
+										input = Console.ReadLine();
+									}
+
+									Console.WriteLine("---Podaj długość listy tabu:");
+									input = Console.ReadLine();
+
+									while (!Int32.TryParse(input, out tlc))
+									{
+										input = Console.ReadLine();
+									}
+									cts = new CancellationTokenSource();
+									Console.Clear();
+									Task.Run(new Action(() => {
+										while (!cts.IsCancellationRequested)
+										{
+											Console.Write(".");
+											Thread.Sleep(1000);
+										}
+									}), ct);
+									TspTabuSearch.SolveTsp(graph, mi, mtfb, pt, tlc);
+									cts.Cancel();
+									cts.Dispose();
+									Console.WriteLine();
+									TspTabuSearch.ShowResults();
 									Console.ReadKey();
 									break;
 								default:
