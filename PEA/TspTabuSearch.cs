@@ -16,7 +16,7 @@ namespace PEA
 		private static int globalBestDistance;
 		private static List<Int16> currentSolution;
 		private static List<Int16> globalBestSolution;
-		private static Int16[][] tabuList; //lista tabu klucz - ruch, wartosc 1 - pozycja na liscie tabu, wartosc 2 - dlugoterminowa kara
+		private static Int16[,,] tabuList; //lista tabu klucz - ruch, wartosc 1 - pozycja na liscie tabu, wartosc 2 - dlugoterminowa kara
 		public static int TabuListCap { get; set; }
 		public static int MaxRestarts { get; set; } //max liczba iteracji algorytmu
 		public static int MaxIterations { get; set; } //max liczba iteracji dla jednego rozwiazania poczatkowego
@@ -57,10 +57,10 @@ namespace PEA
 				TabuListCap = tabuListCap;
 				globalBestDistance = int.MaxValue;
 
-				tabuList = new Int16[numbOfCities][]; //miesci wszystkie miasta ale miasta 0 nie ruszy i tak
+				tabuList = new Int16[numbOfCities, numbOfCities, 2]; //miesci wszystkie miasta ale miasta 0 nie ruszy i tak
 
-				for (int i = 0; i < numbOfCities; i++)
-					tabuList[i] = new Int16[2];
+				//for (int i = 0; i < numbOfCities; i++)
+				//	tabuList[i] = new Int16[2];
 				resetTabuList();
 
 				currentSolution = new List<Int16>(numbOfCities + 1);
@@ -129,25 +129,26 @@ namespace PEA
 				{
 					Swap(i, j, sol);
 					int currentDistance = CalculateCost(sol);
-					int penalty = currentDistance + tabuList[i][1] + tabuList[j][1];
+					int penalty = currentDistance + tabuList[i, j, 1];
 
-					if ((penalty < bestPenaltyScore && tabuList[i][0] <= iteration && tabuList[j][0] <= iteration) || currentDistance < currentBestDistance)
+					if ((penalty < bestPenaltyScore && tabuList[i, j, 0] <= iteration/* && tabuList[j][0] <= iteration*/) || currentDistance < currentBestDistance)
 					{
 						city1 = i;
 						city2 = j;
 						bestPenaltyScore = penalty;
-						tabuList[i][0] = tabuList[j][0] = (Int16)(iteration + TabuListCap);
+						tabuList[i, j, 0] = tabuList[j, i, 0] = (Int16)(iteration + TabuListCap);
 					}
 					Swap(j, i, sol);
-					if (tabuList[i][1] > 0)
+					if (tabuList[i, j, 1] > 0) tabuList[i, j, 1]--;
+					/*if (tabuList[i][1] > 0)
 						tabuList[i][1]--;
 					if (tabuList[j][1] > 0)
-						tabuList[j][1]--;
+						tabuList[j][1]--;*/
 				}
 			}
 
-			tabuList[city1][1] += 2;
-			tabuList[city2][1] += 2;
+			tabuList[city1, city2, 1] += 2;
+			//tabuList[city2][1] += 2;
 			Swap(city1, city2, sol);
 		}
 
@@ -187,10 +188,20 @@ namespace PEA
 
 		private static void resetTabuList()
 		{
-			foreach (Int16[] subArray in tabuList)
+			for (int i = 0; i < tabuList.GetLength(0); i++)
+			{
+				for (int j = 0; j < tabuList.GetLength(1); j++)
+				{
+					for (int k = 0; k < tabuList.GetLength(2); k++)
+					{
+						tabuList[i, j, k] = 0;
+					}
+				}
+			}
+			/*foreach (Int16[] subArray in tabuList)
 			{
 				subArray[0] = subArray[1] = 0;
-			}
+			}*/
 		}
 
 		public static void ShowResults()
