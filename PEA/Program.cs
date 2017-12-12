@@ -92,19 +92,11 @@ namespace PEA
 									break;
 								case '2':
 									Console.Clear();
-									int mr, mi, pt, tlc;
+									int mr, pt, tlc;
 									Console.WriteLine("---Podaj ilość restartów:");
 									input = Console.ReadLine();
 
 									while (!Int32.TryParse(input, out mr))
-									{
-										input = Console.ReadLine();
-									}
-
-									Console.WriteLine("---Podaj ilość iteracji:");
-									input = Console.ReadLine();
-
-									while (!Int32.TryParse(input, out mi))
 									{
 										input = Console.ReadLine();
 									}
@@ -133,7 +125,7 @@ namespace PEA
 											Thread.Sleep(1000);
 										}
 									}), ct);
-									TspTabuSearch.SolveTsp(graph, tlc, mr, mi, pt);
+									TspTabuSearch.SolveTsp(graph, tlc, mr, pt);
 									cts.Cancel();
 									cts.Dispose();
 									Console.WriteLine();

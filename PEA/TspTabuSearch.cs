@@ -19,7 +19,6 @@ namespace PEA
 		private static Int16[,,] tabuList; //lista tabu klucz - ruch, wartosc 1 - pozycja na liscie tabu, wartosc 2 - dlugoterminowa kara
 		public static int TabuListCap { get; set; }
 		public static int MaxRestarts { get; set; } //max liczba iteracji algorytmu
-		public static int MaxIterations { get; set; } //max liczba iteracji dla jednego rozwiazania poczatkowego
 		public static int PityTimer { get; set; } //max liczba iteracji bez poprawy wyniku - po tym losuje nowa sekwencje miast
 		public static Int16[][] InputGraph { get; set; } //graf wejsciowy
 		public static List<Int16> OutputList { get; private set; } //lista miast odwiedzonych w danej kolejnosci
@@ -27,11 +26,11 @@ namespace PEA
 		public static TimeSpan TimeMeasured { get; private set; } //zmierzony czas wykonywania obliczen
 		#endregion
 
-		public static void SolveTsp(TspGraph input, int tabuListCap, int maxRestarts = 100, int maxIterations = 1000, int pityTimer = 100)
+		public static void SolveTsp(TspGraph input, int tabuListCap, int maxRestarts = 10, int pityTimer = 100)
 		{
 			if (input.Dimension > 2 && input.Name != null && input.GraphMatrix != null)
 			{
-				bool allright = Init(input, tabuListCap, maxRestarts, maxIterations, pityTimer);
+				bool allright = Init(input, tabuListCap, maxRestarts, pityTimer);
 
 				if (allright)
 				{
@@ -45,14 +44,13 @@ namespace PEA
 			else Console.WriteLine("Przed uruchomieniem algorytmu wczytaj odpowiednio dane wejściowe.\n(Wciśnij dowolny klawisz aby wrócić)");
 		}
 
-		private static bool Init(TspGraph input, int tabuListCap, int maxRestarts, int maxIterations, int pityTimer)
+		private static bool Init(TspGraph input, int tabuListCap, int maxRestarts, int pityTimer)
 		{
 			try
 			{
 				InputGraph = input.GraphMatrix;
 				numbOfCities = input.Dimension;
 				MaxRestarts = maxRestarts;
-				MaxIterations = maxIterations;
 				PityTimer = pityTimer;
 				TabuListCap = tabuListCap;
 				globalBestDistance = int.MaxValue;
@@ -90,12 +88,12 @@ namespace PEA
 				int pityTimerCount = 0;
 				currentBestDistance = int.MaxValue;
 
-				for (int i = 0; i < MaxIterations; i++)
+				for (int i = 0; ; i++)
 				{
 					GetBestNeighbour(i, currentSolution);
 					int distance = CalculateCost(currentSolution);
 
-					if (distance <= currentBestDistance) // <= zamiast <
+					if (distance < currentBestDistance) // <= zamiast <
 					{
 						currentBestDistance = distance;
 						pityTimerCount = 0;
@@ -105,12 +103,12 @@ namespace PEA
 							globalBestSolution = currentSolution;
 							globalBestDistance = currentBestDistance;
 						}
-						else
-						{
-							pityTimerCount++;
-							if (pityTimerCount >= PityTimer)
-								break;
-						}
+					}
+					else
+					{
+						pityTimerCount++;
+						if (pityTimerCount >= PityTimer)
+							break;
 					}
 				}
 			}
@@ -129,7 +127,7 @@ namespace PEA
 				{
 					Swap(i, j, sol);
 					int currentDistance = CalculateCost(sol);
-					int penalty = currentDistance + tabuList[i, j, 1];
+					int penalty = currentDistance + 10 * tabuList[i, j, 1]; //10 - stały mnożnik kary
 
 					if ((penalty < bestPenaltyScore && tabuList[i, j, 0] <= iteration/* && tabuList[j][0] <= iteration*/) || currentDistance < currentBestDistance)
 					{
@@ -211,7 +209,6 @@ namespace PEA
 				Console.WriteLine("Tabu Search - wyniki");
 				Console.WriteLine("Parametry:");
 				Console.WriteLine("Maksymalna ilość restartów: " + MaxRestarts);
-				Console.WriteLine("Maksymalna ilość iteracji: " + MaxIterations);
 				Console.WriteLine("Dopuszczalna ilość iteracji bez poprawy wyniku: " + PityTimer);
 				Console.WriteLine("Długość listy zakazów: " + TabuListCap);
 				Console.WriteLine("Długość ścieżki: " + PathDistance);
