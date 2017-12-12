@@ -30,7 +30,8 @@ namespace PEA
 				Console.WriteLine ("--3. Rozwiąż problem za pomocą wybranego algorytmu.");
 				Console.WriteLine ("--4. Stwórz zestaw o określonej ilości miast.");
 				Console.WriteLine ("--5. Przeprowadź testy czasowe dla losowych instancji.");
-				Console.WriteLine ("--6. Przeprowadź testy czasowe dla danych z tsplib.");
+				Console.WriteLine ("--6. Przeprowadź testy czasowe dla danych z tsplib (Programowanie dynamiczne).");
+				Console.WriteLine ("--7. Przeprowadź testy czasowe dla danych z tsplib (Tabu Search).");
 
 				primaryMenuKey = Console.ReadKey().KeyChar;
 
@@ -91,19 +92,19 @@ namespace PEA
 									break;
 								case '2':
 									Console.Clear();
-									int mi, mtfb, pt, tlc;
-									Console.WriteLine("---Podaj ilość iteracji:");
+									int mr, mi, pt, tlc;
+									Console.WriteLine("---Podaj ilość restartów:");
 									input = Console.ReadLine();
 
-									while (!Int32.TryParse(input, out mi))
+									while (!Int32.TryParse(input, out mr))
 									{
 										input = Console.ReadLine();
 									}
 
-									Console.WriteLine("---Podaj ilość prób dla jednej gałęzi:");
+									Console.WriteLine("---Podaj ilość iteracji:");
 									input = Console.ReadLine();
 
-									while (!Int32.TryParse(input, out mtfb))
+									while (!Int32.TryParse(input, out mi))
 									{
 										input = Console.ReadLine();
 									}
@@ -132,7 +133,7 @@ namespace PEA
 											Thread.Sleep(1000);
 										}
 									}), ct);
-									TspTabuSearch.SolveTsp(graph, mi, mtfb, pt, tlc);
+									TspTabuSearch.SolveTsp(graph, tlc, mr, mi, pt);
 									cts.Cancel();
 									cts.Dispose();
 									Console.WriteLine();
@@ -207,6 +208,20 @@ namespace PEA
 							Console.WriteLine("Wykonywane są testy. Może to zająć dużo czasu.");
 							double[,] results = DpTestsTspLib(graph);
 							TimesToFile("DpTspLib.txt", GetAverageTimes(results));
+							Console.WriteLine("Koniec testów. Wciśnij dowolny klawisz aby wrócić do menu.");
+							Console.ReadKey();
+						}
+						break;
+					case '7':
+						Console.Clear();
+						Console.WriteLine("Zostaną przprowadzone testy dla danych z tsplib. Wciśnij ESC aby anulować albo dowolny klawisz aby kontynuować.");
+						secondaryMenuKey = Console.ReadKey().KeyChar;
+						if (secondaryMenuKey != 27)
+						{
+							Console.WriteLine("Wykonywane są testy. Może to zająć dużo czasu.");
+							Tuple<double[,], int[,]> results = TsTestsTspLib(graph);
+							TimesToFile("TsTspLibTests.txt", GetAverageTimes(results.Item1));
+							DistancesToFile("TsTspLibDistances.txt", GetAverageDistances(results.Item2));
 							Console.WriteLine("Koniec testów. Wciśnij dowolny klawisz aby wrócić do menu.");
 							Console.ReadKey();
 						}
@@ -287,6 +302,156 @@ namespace PEA
 			return timesArray;
 		}
 
+		private static Tuple<double[,], int[,]> TsTestsTspLib(TspGraph graph)
+		{
+			double[,] timesArray = new double[16, 10];
+			int[,] distancesArray = new int[16, 10];
+			int i = 0;
+
+			graph = new TspGraph();
+			graph.ReadGraphFromFile(AppDomain.CurrentDomain.BaseDirectory + @"\tsplib\gr24.tsp");
+
+			for (int j = 0; j < timesArray.GetLength(1); j++)
+			{
+				TspTabuSearch.SolveTsp(graph, graph.Dimension / 8);
+				timesArray[i, j] = TspTabuSearch.TimeMeasured.TotalMilliseconds;
+				distancesArray[i, j] = TspTabuSearch.PathDistance;
+			}
+			i++;
+
+			for (int j = 0; j < timesArray.GetLength(1); j++)
+			{
+				TspTabuSearch.SolveTsp(graph, graph.Dimension / 6);
+				timesArray[i, j] = TspTabuSearch.TimeMeasured.TotalMilliseconds;
+				distancesArray[i, j] = TspTabuSearch.PathDistance;
+			}
+			i++;
+
+			for (int j = 0; j < timesArray.GetLength(1); j++)
+			{
+				TspTabuSearch.SolveTsp(graph, graph.Dimension / 4);
+				timesArray[i, j] = TspTabuSearch.TimeMeasured.TotalMilliseconds;
+				distancesArray[i, j] = TspTabuSearch.PathDistance;
+			}
+			i++;
+
+			for (int j = 0; j < timesArray.GetLength(1); j++)
+			{
+				TspTabuSearch.SolveTsp(graph, graph.Dimension / 2);
+				timesArray[i, j] = TspTabuSearch.TimeMeasured.TotalMilliseconds;
+				distancesArray[i, j] = TspTabuSearch.PathDistance;
+			}
+			i++;
+
+			graph = new TspGraph();
+			graph.ReadGraphFromFile(AppDomain.CurrentDomain.BaseDirectory + @"\tsplib\gr48.tsp");
+
+			for (int j = 0; j < timesArray.GetLength(1); j++)
+			{
+				TspTabuSearch.SolveTsp(graph, graph.Dimension / 8);
+				timesArray[i, j] = TspTabuSearch.TimeMeasured.TotalMilliseconds;
+				distancesArray[i, j] = TspTabuSearch.PathDistance;
+			}
+			i++;
+
+			for (int j = 0; j < timesArray.GetLength(1); j++)
+			{
+				TspTabuSearch.SolveTsp(graph, graph.Dimension / 6);
+				timesArray[i, j] = TspTabuSearch.TimeMeasured.TotalMilliseconds;
+				distancesArray[i, j] = TspTabuSearch.PathDistance;
+			}
+			i++;
+
+			for (int j = 0; j < timesArray.GetLength(1); j++)
+			{
+				TspTabuSearch.SolveTsp(graph, graph.Dimension / 4);
+				timesArray[i, j] = TspTabuSearch.TimeMeasured.TotalMilliseconds;
+				distancesArray[i, j] = TspTabuSearch.PathDistance;
+			}
+			i++;
+
+			for (int j = 0; j < timesArray.GetLength(1); j++)
+			{
+				TspTabuSearch.SolveTsp(graph, graph.Dimension / 2);
+				timesArray[i, j] = TspTabuSearch.TimeMeasured.TotalMilliseconds;
+				distancesArray[i, j] = TspTabuSearch.PathDistance;
+			}
+			i++;
+
+			graph = new TspGraph();
+			graph.ReadGraphFromFile(AppDomain.CurrentDomain.BaseDirectory + @"\tsplib\ftv70.atsp");
+
+			for (int j = 0; j < timesArray.GetLength(1); j++)
+			{
+				TspTabuSearch.SolveTsp(graph, graph.Dimension / 8);
+				timesArray[i, j] = TspTabuSearch.TimeMeasured.TotalMilliseconds;
+				distancesArray[i, j] = TspTabuSearch.PathDistance;
+			}
+			i++;
+
+			for (int j = 0; j < timesArray.GetLength(1); j++)
+			{
+				TspTabuSearch.SolveTsp(graph, graph.Dimension / 6);
+				timesArray[i, j] = TspTabuSearch.TimeMeasured.TotalMilliseconds;
+				distancesArray[i, j] = TspTabuSearch.PathDistance;
+			}
+			i++;
+
+			for (int j = 0; j < timesArray.GetLength(1); j++)
+			{
+				TspTabuSearch.SolveTsp(graph, graph.Dimension / 4);
+				timesArray[i, j] = TspTabuSearch.TimeMeasured.TotalMilliseconds;
+				distancesArray[i, j] = TspTabuSearch.PathDistance;
+			}
+			i++;
+
+			for (int j = 0; j < timesArray.GetLength(1); j++)
+			{
+				TspTabuSearch.SolveTsp(graph, graph.Dimension / 2);
+				timesArray[i, j] = TspTabuSearch.TimeMeasured.TotalMilliseconds;
+				distancesArray[i, j] = TspTabuSearch.PathDistance;
+			}
+			i++;
+
+			graph = new TspGraph();
+			graph.ReadGraphFromFile(AppDomain.CurrentDomain.BaseDirectory + @"\tsplib\kro124p.atsp");
+
+			for (int j = 0; j < timesArray.GetLength(1); j++)
+			{
+				TspTabuSearch.SolveTsp(graph, graph.Dimension / 8);
+				timesArray[i, j] = TspTabuSearch.TimeMeasured.TotalMilliseconds;
+				distancesArray[i, j] = TspTabuSearch.PathDistance;
+			}
+			i++;
+
+			for (int j = 0; j < timesArray.GetLength(1); j++)
+			{
+				TspTabuSearch.SolveTsp(graph, graph.Dimension / 6);
+				timesArray[i, j] = TspTabuSearch.TimeMeasured.TotalMilliseconds;
+				distancesArray[i, j] = TspTabuSearch.PathDistance;
+			}
+			i++;
+
+			for (int j = 0; j < timesArray.GetLength(1); j++)
+			{
+				TspTabuSearch.SolveTsp(graph, graph.Dimension / 4);
+				timesArray[i, j] = TspTabuSearch.TimeMeasured.TotalMilliseconds;
+				distancesArray[i, j] = TspTabuSearch.PathDistance;
+			}
+			i++;
+
+			for (int j = 0; j < timesArray.GetLength(1); j++)
+			{
+				TspTabuSearch.SolveTsp(graph, graph.Dimension / 2);
+				timesArray[i, j] = TspTabuSearch.TimeMeasured.TotalMilliseconds;
+				distancesArray[i, j] = TspTabuSearch.PathDistance;
+			}
+
+			Tuple<double[,], int[,]> returnTuple = new Tuple<double[,], int[,]>(timesArray, distancesArray);
+
+			return returnTuple;
+		}
+
 		private static double[] GetAverageTimes(double[,] times)
 		{
 			double[] avgTimesArray = new double[times.GetLength(0)];
@@ -307,6 +472,26 @@ namespace PEA
 			return avgTimesArray;
 		}
 
+		private static double[] GetAverageDistances(int[,] distances)
+		{
+			double[] avgDistArray = new double[distances.GetLength(0)];
+			double temp = 0;
+
+			for (int i = 0; i < distances.GetLength(0); i++)
+			{
+				for (int j = 0; j < distances.GetLength(1); j++)
+				{
+					temp += distances[i, j];
+				}
+
+				temp = temp / distances.GetLength(1);
+				avgDistArray[i] = temp;
+				temp = 0;
+			}
+
+			return avgDistArray;
+		}
+
 		private static void TimesToFile(string filename, double[] times)
 		{
 			string dir = AppDomain.CurrentDomain.BaseDirectory + @"\Times\";
@@ -319,6 +504,23 @@ namespace PEA
 			foreach (double time in times)
 			{
 				file.WriteLine(time.ToString("F3"));
+			}
+
+			file.Close();
+		}
+
+		private static void DistancesToFile(string filename, double[] distances)
+		{
+			string dir = AppDomain.CurrentDomain.BaseDirectory + @"\Distances\";
+			if (!Directory.Exists(dir))
+				Directory.CreateDirectory(dir);
+			StreamWriter file = new StreamWriter(dir + filename);
+
+			file.WriteLine("Długości ścieżek:");
+
+			foreach (double distance in distances)
+			{
+				file.WriteLine(distance.ToString("F3"));
 			}
 
 			file.Close();

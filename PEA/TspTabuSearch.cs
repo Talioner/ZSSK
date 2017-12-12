@@ -18,8 +18,8 @@ namespace PEA
 		private static List<Int16> globalBestSolution;
 		private static Int16[][] tabuList; //lista tabu klucz - ruch, wartosc 1 - pozycja na liscie tabu, wartosc 2 - dlugoterminowa kara
 		public static int TabuListCap { get; set; }
-		public static int MaxIterations { get; set; } //max liczba iteracji algorytmu
-		public static int MaxTriesForBranch { get; set; } //max liczba iteracji dla jednego rozwiazania poczatkowego
+		public static int MaxRestarts { get; set; } //max liczba iteracji algorytmu
+		public static int MaxIterations { get; set; } //max liczba iteracji dla jednego rozwiazania poczatkowego
 		public static int PityTimer { get; set; } //max liczba iteracji bez poprawy wyniku - po tym losuje nowa sekwencje miast
 		public static Int16[][] InputGraph { get; set; } //graf wejsciowy
 		public static List<Int16> OutputList { get; private set; } //lista miast odwiedzonych w danej kolejnosci
@@ -27,28 +27,32 @@ namespace PEA
 		public static TimeSpan TimeMeasured { get; private set; } //zmierzony czas wykonywania obliczen
 		#endregion
 
-		public static void SolveTsp(TspGraph input, int maxIterations, int maxTriesForBranch, int pityTimer, int tabuListCap)
+		public static void SolveTsp(TspGraph input, int tabuListCap, int maxRestarts = 100, int maxIterations = 1000, int pityTimer = 100)
 		{
-			bool allright = Init(input, maxIterations, maxTriesForBranch, pityTimer, tabuListCap);
-
-			if (allright)
+			if (input.Dimension > 2 && input.Name != null && input.GraphMatrix != null)
 			{
-				Stopwatch stopwatch = new Stopwatch();
-				stopwatch.Start();
-				Search();
-				stopwatch.Stop();
-				TimeMeasured = stopwatch.Elapsed;
+				bool allright = Init(input, tabuListCap, maxRestarts, maxIterations, pityTimer);
+
+				if (allright)
+				{
+					Stopwatch stopwatch = new Stopwatch();
+					stopwatch.Start();
+					Search();
+					stopwatch.Stop();
+					TimeMeasured = stopwatch.Elapsed;
+				}
 			}
+			else Console.WriteLine("Przed uruchomieniem algorytmu wczytaj odpowiednio dane wejściowe.\n(Wciśnij dowolny klawisz aby wrócić)");
 		}
 
-		private static bool Init(TspGraph input, int maxIterations, int maxTriesForBranch, int pityTimer, int tabuListCap)
+		private static bool Init(TspGraph input, int tabuListCap, int maxRestarts, int maxIterations, int pityTimer)
 		{
 			try
 			{
 				InputGraph = input.GraphMatrix;
 				numbOfCities = input.Dimension;
+				MaxRestarts = maxRestarts;
 				MaxIterations = maxIterations;
-				MaxTriesForBranch = maxTriesForBranch;
 				PityTimer = pityTimer;
 				TabuListCap = tabuListCap;
 				globalBestDistance = int.MaxValue;
@@ -76,19 +80,22 @@ namespace PEA
 
 		private static void Search()
 		{
-			for (int x = 0; x < MaxIterations; x++)
+			currentBestDistance = int.MaxValue;
+			//RandomizeSolution(currentSolution);
+			//int randomizeCounter = 0;
+			for (int x = 0; x < MaxRestarts; x++)
 			{
 				RandomizeSolution(currentSolution);
 				resetTabuList();
 				int pityTimerCount = 0;
 				currentBestDistance = int.MaxValue;
 
-				for (int i = 0; i < MaxTriesForBranch; i++)
+				for (int i = 0; i < MaxIterations; i++)
 				{
 					GetBestNeighbour(i, currentSolution);
 					int distance = CalculateCost(currentSolution);
 
-					if (distance < currentBestDistance)
+					if (distance <= currentBestDistance) // <= zamiast <
 					{
 						currentBestDistance = distance;
 						pityTimerCount = 0;
@@ -101,7 +108,7 @@ namespace PEA
 						else
 						{
 							pityTimerCount++;
-							if (pityTimerCount > PityTimer)
+							if (pityTimerCount >= PityTimer)
 								break;
 						}
 					}
@@ -122,9 +129,9 @@ namespace PEA
 				{
 					Swap(i, j, sol);
 					int currentDistance = CalculateCost(sol);
-					int penalty = currentDistance + tabuList[i][1];
+					int penalty = currentDistance + tabuList[i][1] + tabuList[j][1];
 
-					if ((penalty < bestPenaltyScore && tabuList[i][0] <= iteration) || currentDistance < currentBestDistance)
+					if ((penalty < bestPenaltyScore && tabuList[i][0] <= iteration && tabuList[j][0] <= iteration) || currentDistance < currentBestDistance)
 					{
 						city1 = i;
 						city2 = j;
@@ -192,8 +199,8 @@ namespace PEA
 			{
 				Console.WriteLine("Tabu Search - wyniki");
 				Console.WriteLine("Parametry:");
+				Console.WriteLine("Maksymalna ilość restartów: " + MaxRestarts);
 				Console.WriteLine("Maksymalna ilość iteracji: " + MaxIterations);
-				Console.WriteLine("Maksymalna ilość prób dla jednej gałęzi: " + MaxTriesForBranch);
 				Console.WriteLine("Dopuszczalna ilość iteracji bez poprawy wyniku: " + PityTimer);
 				Console.WriteLine("Długość listy zakazów: " + TabuListCap);
 				Console.WriteLine("Długość ścieżki: " + PathDistance);
