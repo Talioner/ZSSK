@@ -27,7 +27,7 @@ namespace PEA
 		public static TimeSpan TimeMeasured { get; private set; } //zmierzony czas wykonywania obliczen
 		#endregion
 
-		public static void SolveTsp(TspGraph input, int generations, int populationSize, int elitismSize, double mutationRate = 0.01, int tournamentSize = 2)
+		public static void SolveTsp(TspGraph input, int generations, int populationSize, int elitismSize, double mutationRate = 0.1, int tournamentSize = 2)
 		{
 			if (input.Dimension > 2 && input.Name != null && input.GraphMatrix != null)
 			{
@@ -94,6 +94,8 @@ namespace PEA
 			for (int i = 0; i < Generations; i++)
 			{
 				population = NextGeneration();
+				Debug.WriteLine("PopulationSize: " + population.Count);
+				Debug.WriteLine("Generation: " + i);
 				fitnessList = new List<double>(PopulationSize);
 
 				for (int j = 0; j < fitnessList.Capacity; j++)
@@ -123,14 +125,14 @@ namespace PEA
 				List<Int16> parentA = TournamentSelection();
 				List<Int16> parentB = TournamentSelection();
 
-				Tuple<List<Int16>, List<Int16>> children = Crossover(parentA, parentB);
+				Tuple<List<Int16>, List<Int16>> children = CrossoverOX(parentA, parentB);
 				List<Int16> child1 = children.Item1;
 				List<Int16> child2 = children.Item2;
 
 				if (rand.NextDouble() < MutationRate)
-					Mutate(child1);
+					MutationInvert(child1);
 				if (rand.NextDouble() < MutationRate)
-					Mutate(child2);
+					MutationInvert(child2);
 				newPopulation.Add(child1);
 				newPopulation.Add(child2);
 			}
@@ -204,7 +206,7 @@ namespace PEA
 			}
 		}
 
-		private static Tuple<List<Int16>, List<Int16>> CrossoverFixedPosition(List<Int16> parentA, List<Int16> parentB)
+		private static Tuple<List<Int16>, List<Int16>> CrossoverPMX(List<Int16> parentA, List<Int16> parentB)
 		{
 			Random rand = new Random();
 			int startIndex = rand.Next(1, parentA.Count - 2);
@@ -224,21 +226,23 @@ namespace PEA
 				child2[i] = parentB[i];
 			}
 
+			int itA = 1, itB = 1;
+
 			for (int i = 1; i < startIndex; i++)
 			{
-				for (int j = 1; j < parentB.Count - 1; j++)
+				for (; itB < parentB.Count - 1; itB++)
 				{
-					if (!child1.Contains(parentB[j]))
+					if (!child1.Contains(parentB[itB]))
 					{
-						child1[i] = parentB[j];
+						child1[i] = parentB[itB];
 						break;
 					}
 				}
-				for (int j = 1; j < parentA.Count - 1; j++)
+				for (; itA < parentA.Count - 1; itA++)
 				{
-					if (!child2.Contains(parentA[j]))
+					if (!child2.Contains(parentA[itA]))
 					{
-						child2[i] = parentA[j];
+						child2[i] = parentA[itA];
 						break;
 					}
 				}
@@ -246,19 +250,87 @@ namespace PEA
 
 			for (int i = endIndex + 1; i < child1.Capacity - 1; i++)
 			{
-				for (int j = 1; j < parentB.Count - 1; j++)
+				for (; itB < parentB.Count - 1; itB++)
 				{
-					if (!child1.Contains(parentB[j]))
+					if (!child1.Contains(parentB[itB]))
 					{
-						child1[i] = parentB[j];
+						child1[i] = parentB[itB];
 						break;
 					}
 				}
-				for (int j = 1; j < parentA.Count - 1; j++)
+				for (; itA < parentA.Count - 1; itA++)
 				{
-					if (!child2.Contains(parentA[j]))
+					if (!child2.Contains(parentA[itA]))
 					{
-						child2[i] = parentA[j];
+						child2[i] = parentA[itA];
+						break;
+					}
+				}
+			}
+
+			Tuple<List<Int16>, List<Int16>> returnTuple = new Tuple<List<Int16>, List<Int16>>(child1, child2);
+
+			return returnTuple;
+		}
+
+		private static Tuple<List<Int16>, List<Int16>> CrossoverOX(List<Int16> parentA, List<Int16> parentB)
+		{
+			//TODO
+			Random rand = new Random();
+			int startIndex = rand.Next(1, parentA.Count - 2);
+			int endIndex = rand.Next(startIndex + 1, parentA.Count - 1);
+			List<Int16> child1 = new List<Int16>(parentA.Count);
+			List<Int16> child2 = new List<Int16>(parentA.Count);
+
+			for (int i = 0; i < child1.Capacity; i++)
+			{
+				child1.Add(0);
+				child2.Add(0);
+			}
+
+			for (int i = startIndex; i <= endIndex; i++)
+			{
+				child1[i] = parentA[i];
+				child2[i] = parentB[i];
+			}
+
+			int itA = 1, itB = 1;
+
+			for (int i = endIndex + 1; i < child1.Capacity - 1; i++)
+			{
+				for (; itB < parentB.Count - 1; itB++)
+				{
+					if (!child1.Contains(parentB[itB]))
+					{
+						child1[i] = parentB[itB];
+						break;
+					}
+				}
+				for (; itA < parentA.Count - 1; itA++)
+				{
+					if (!child2.Contains(parentA[itA]))
+					{
+						child2[i] = parentA[itA];
+						break;
+					}
+				}
+			}
+
+			for (int i = 1; i < startIndex; i++)
+			{
+				for (; itB < parentB.Count - 1; itB++)
+				{
+					if (!child1.Contains(parentB[itB]))
+					{
+						child1[i] = parentB[itB];
+						break;
+					}
+				}
+				for (; itA < parentA.Count - 1; itA++)
+				{
+					if (!child2.Contains(parentA[itA]))
+					{
+						child2[i] = parentA[itA];
 						break;
 					}
 				}
@@ -307,7 +379,7 @@ namespace PEA
 			return returnTuple;
 		}
 
-		private static void Mutate(List<Int16> sol)
+		private static void MutationSwap(List<Int16> sol)
 		{
 			Random rand = new Random();
 			int point1 = rand.Next(1, sol.Count - 1);
@@ -317,6 +389,16 @@ namespace PEA
 				point2 = rand.Next(1, sol.Count - 1);
 
 			Swap(point1, point2, sol);
+		}
+
+		private static void MutationInvert(List<Int16> sol)
+		{
+			Random rand = new Random();
+			int startIndex = rand.Next(1, sol.Count - 2);
+			int endIndex = rand.Next(startIndex + 1, sol.Count - 1);
+			int howMany = endIndex - startIndex;
+
+			sol.Reverse(startIndex, howMany);
 		}
 
 		private static int CalculateCost(List<Int16> sol)
