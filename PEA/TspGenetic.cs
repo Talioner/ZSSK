@@ -11,11 +11,12 @@ namespace PEA
 	{
 		#region FieldsAndProperties
 		private static int numbOfCities; //liczba miast
-		//private static int globalBestDistance;
+										 //private static int globalBestDistance;
 		private static double globalBestFitness;
 		private static List<List<Int16>> population; //populacja - tablica tablic reprezentujacych osobnikow
 		private static List<double> fitnessList;
 		private static List<Int16> globalBestSolution;
+		private static Random rand1, rand2;
 		public static int Generations { get; set; }
 		public static Int16[][] InputGraph { get; set; } //graf wejsciowy
 		public static List<Int16> OutputList { get; private set; } //lista miast odwiedzonych w danej kolejnosci
@@ -27,7 +28,7 @@ namespace PEA
 		public static TimeSpan TimeMeasured { get; private set; } //zmierzony czas wykonywania obliczen
 		#endregion
 
-		public static void SolveTsp(TspGraph input, int generations, int populationSize, int elitismSize, double mutationRate = 0.1, int tournamentSize = 2)
+		public static void SolveTsp(TspGraph input, int generations, int populationSize, int elitismSize, double mutationRate = 0.05, int tournamentSize = 2)
 		{
 			if (input.Dimension > 2 && input.Name != null && input.GraphMatrix != null)
 			{
@@ -64,19 +65,25 @@ namespace PEA
 				MutationRate = mutationRate;
 				//globalBestDistance = int.MaxValue;
 				globalBestFitness = 0;
+				rand1 = new Random();
+				rand2 = new Random();
 
-				var initial = new List<Int16>(numbOfCities + 1);
+				//var initial = new List<Int16>(numbOfCities + 1);
 				fitnessList = new List<double>(populationSize);
 
-				for (Int16 i = 0; i < initial.Capacity - 1; i++)
-					initial.Add(i);
-				initial.Add(0);
+				//for (Int16 i = 0; i < initial.Capacity - 1; i++)
+				//	initial.Add(i);
+				//initial.Add(0);
 
 				population = new List<List<Int16>>(populationSize);
 
 				for (int i = 0; i < population.Capacity; i++)
 				{
-					population.Add(GenerateIndividual(initial));
+					population.Add(new List<short>(numbOfCities + 1));
+					for (Int16 j = 0; j < population[i].Capacity - 1; j++)
+						population[i].Add(j);
+					population[i].Add(0);
+					RandomizeSolution(population[i], i);
 					fitnessList.Add(CalculateFitness(population[i]));
 				}
 			}
@@ -117,7 +124,8 @@ namespace PEA
 		private static List<List<Int16>> NextGeneration()
 		{
 			List<List<Int16>> newPopulation = new List<List<Int16>>(PopulationSize);
-			Random rand = new Random();
+			//Random rand1 = new Random();
+			//Random rand2 = new Random();
 			ChooseElites(newPopulation);
 
 			for (int i = 0; i < (PopulationSize - ElitismSize) / 2; i++)
@@ -129,9 +137,9 @@ namespace PEA
 				List<Int16> child1 = children.Item1;
 				List<Int16> child2 = children.Item2;
 
-				if (rand.NextDouble() < MutationRate)
+				if (rand1.NextDouble() < MutationRate)
 					MutationInvert(child1);
-				if (rand.NextDouble() < MutationRate)
+				if (rand2.NextDouble() < MutationRate)
 					MutationInvert(child2);
 				newPopulation.Add(child1);
 				newPopulation.Add(child2);
@@ -142,14 +150,14 @@ namespace PEA
 
 		private static List<Int16> TournamentSelection()
 		{
-			Random rand = new Random();
-			int index = rand.Next(PopulationSize);
+			//Random rand = new Random();
+			int index = rand1.Next(PopulationSize);
 			int bestIndex = index;
 			double bestFitness = fitnessList[index];
 
 			for (int i = 1; i < TournamentSize; i++)
 			{
-				index = rand.Next(PopulationSize);
+				index = rand1.Next(PopulationSize);
 				if (fitnessList[index] > bestFitness)
 				{
 					//best = population[index];
@@ -167,7 +175,7 @@ namespace PEA
 		{
 			double max = 0;
 			int maxIndex = 0;
-			
+
 			for (int j = 0; j < fitnessListPar.Count; j++)
 			{
 				if (fitnessListPar[j] > max)
@@ -208,9 +216,10 @@ namespace PEA
 
 		private static Tuple<List<Int16>, List<Int16>> CrossoverPMX(List<Int16> parentA, List<Int16> parentB)
 		{
-			Random rand = new Random();
-			int startIndex = rand.Next(1, parentA.Count - 2);
-			int endIndex = rand.Next(startIndex + 1, parentA.Count - 1);
+			//Random rand1 = new Random();
+			//Random rand2 = new Random();
+			int startIndex = rand1.Next(1, parentA.Count - 2);
+			int endIndex = rand2.Next(startIndex + 1, parentA.Count - 1);
 			List<Int16> child1 = new List<Int16>(parentA.Count);
 			List<Int16> child2 = new List<Int16>(parentA.Count);
 
@@ -275,10 +284,10 @@ namespace PEA
 
 		private static Tuple<List<Int16>, List<Int16>> CrossoverOX(List<Int16> parentA, List<Int16> parentB)
 		{
-			//TODO
-			Random rand = new Random();
-			int startIndex = rand.Next(1, parentA.Count - 2);
-			int endIndex = rand.Next(startIndex + 1, parentA.Count - 1);
+			//Random rand1 = new Random();
+			//Random rand2 = new Random();
+			int startIndex = rand1.Next(1, parentA.Count - 2);
+			int endIndex = rand2.Next(startIndex + 1, parentA.Count - 1);
 			List<Int16> child1 = new List<Int16>(parentA.Count);
 			List<Int16> child2 = new List<Int16>(parentA.Count);
 
@@ -343,16 +352,17 @@ namespace PEA
 
 		private static Tuple<List<Int16>, List<Int16>> Crossover(List<Int16> parentA, List<Int16> parentB)
 		{
-			Random rand = new Random();
-			int startIndex = rand.Next(1, parentA.Count - 2);
-			int endIndex = rand.Next(startIndex + 1, parentA.Count - 1);
+			//Random rand1 = new Random();
+			//Random rand2 = new Random();
+			int startIndex = rand1.Next(1, parentA.Count - 2);
+			int endIndex = rand2.Next(startIndex + 1, parentA.Count - 1);
 			List<Int16> child1 = new List<Int16>(parentA.Count);
 			List<Int16> child2 = new List<Int16>(parentA.Count);
 
 			//for (int i = 0; i < child1.Capacity; i++)
 			//{
-				child1.Add(0);
-				child2.Add(0);
+			child1.Add(0);
+			child2.Add(0);
 			//}
 
 			for (int i = startIndex; i <= endIndex; i++)
@@ -381,21 +391,21 @@ namespace PEA
 
 		private static void MutationSwap(List<Int16> sol)
 		{
-			Random rand = new Random();
-			int point1 = rand.Next(1, sol.Count - 1);
-			int point2 = rand.Next(1, sol.Count - 1);
+			//Random rand = new Random();
+			int point1 = rand1.Next(1, sol.Count - 1);
+			int point2 = rand1.Next(1, sol.Count - 1);
 
 			while (point1 == point2)
-				point2 = rand.Next(1, sol.Count - 1);
+				point2 = rand1.Next(1, sol.Count - 1);
 
 			Swap(point1, point2, sol);
 		}
 
 		private static void MutationInvert(List<Int16> sol)
 		{
-			Random rand = new Random();
-			int startIndex = rand.Next(1, sol.Count - 2);
-			int endIndex = rand.Next(startIndex + 1, sol.Count - 1);
+			//Random rand = new Random();
+			int startIndex = rand1.Next(1, sol.Count - 2);
+			int endIndex = rand1.Next(startIndex + 1, sol.Count - 1);
 			int howMany = endIndex - startIndex;
 
 			sol.Reverse(startIndex, howMany);
@@ -422,7 +432,7 @@ namespace PEA
 		{
 			int distance = CalculateCost(sol);
 
-			return 1000.0 / distance;
+			return 10000.0 / distance;
 		}
 
 		private static void Swap(int i, int j, List<Int16> sol)
@@ -430,6 +440,16 @@ namespace PEA
 			Int16 temp = sol[i];
 			sol[i] = sol[j];
 			sol[j] = temp;
+		}
+
+		private static void RandomizeSolution(List<Int16> sol, int seed)
+		{
+			Random rand = new Random(seed);
+			for (int i = 1; i < sol.Count - 1; i++)
+			{
+				int j = rand.Next(1, sol.Count - 1);
+				Swap(i, j, sol);
+			}
 		}
 
 		private static List<Int16> GenerateIndividual(List<Int16> sol)
