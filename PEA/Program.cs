@@ -135,11 +135,20 @@ namespace PEA
 									break;
 								case '3':
 									Console.Clear();
-									int gens, pop, elites;
-									Console.WriteLine("---Podaj ilość pokoleń:");
+									int pop, elites;
+									double mutrate, crossrate;
+									Console.WriteLine("---Podaj prawdopodobieństwo krzyżowania:");
 									input = Console.ReadLine();
 
-									while (!Int32.TryParse(input, out gens))
+									while (!double.TryParse(input, out crossrate))
+									{
+										input = Console.ReadLine();
+									}
+
+									Console.WriteLine("---Podaj prawdopodobieństwo mutacji:");
+									input = Console.ReadLine();
+
+									while (!double.TryParse(input, out mutrate))
 									{
 										input = Console.ReadLine();
 									}
@@ -169,7 +178,7 @@ namespace PEA
 											Thread.Sleep(1000);
 										}
 									}, ct);
-									TspGenetic.SolveTsp(graph, gens, pop, elites);
+									TspGenetic.SolveTsp(graph, elites, crossrate, mutrate, pop, CrossoverType.OX);
 									cts.Cancel();
 									cts.Dispose();
 									Console.WriteLine();
