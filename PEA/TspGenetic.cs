@@ -42,6 +42,11 @@ namespace PEA
 					elitismSize--;
 					Console.WriteLine("Ilość elit powinna być podzielna przez 2. Zmniejszono o 1.");
 				}
+				if (populationSize % 2 == 1)
+				{
+					populationSize--;
+					Console.WriteLine("Wielkość populacji powinna być podzielna przez 2. Zmniejszono o 1.");
+				}
 
 				bool allright = Init(input, generations, populationSize, elitismSize, tournamentSize, mutationRate, crossoverRate, cT, limit);
 
@@ -99,12 +104,13 @@ namespace PEA
 
 		private static void Search()
 		{
-			for (int i = 0; i < Generations && stopwatch.Elapsed.Seconds < timeLimit; i++)
+			double currentRunningTime = 0;
+			for (int i = 0; i < Generations; i++)
 			{
 				population = NextGeneration();
 				//Debug.WriteLine("PopulationSize: " + population.Count);
-				if (i % 20 == 19)
-					Debug.WriteLine("Generation: " + i);
+				//if (i % 20 == 19)
+					//Debug.WriteLine("Generation: " + i);
 				
 				fitnessList = new List<double>(PopulationSize);
 
@@ -119,8 +125,12 @@ namespace PEA
 					globalBestSolution = population[tempMaxIndex];
 				}
 
-				if (i % 1000 == 999)
-					Debug.WriteLine("Current best fitness:" + globalBestFitness);
+				currentRunningTime = stopwatch.Elapsed.TotalSeconds;
+				Debug.WriteLine(currentRunningTime);
+				if (currentRunningTime > timeLimit)
+					break;
+				//if (i % 1000 == 999)
+					//Debug.WriteLine("Current best fitness:" + globalBestFitness);
 			}
 
 			OutputList = globalBestSolution;
@@ -453,19 +463,6 @@ namespace PEA
 				int j = rand.Next(1, sol.Count - 1);
 				Swap(i, j, sol);
 			}
-		}
-
-		private static List<Int16> GenerateIndividual(List<Int16> sol)
-		{
-			List<Int16> toReturn = new List<Int16>(sol);
-			Random rand = new Random();
-			for (int i = 1; i < toReturn.Count - 1; i++)
-			{
-				int j = rand.Next(1, toReturn.Count - 1);
-				Swap(i, j, toReturn);
-			}
-
-			return toReturn;
 		}
 
 		public static void ShowResults()
